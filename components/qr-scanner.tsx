@@ -4,49 +4,122 @@ import { useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 
 type QrScannerProps = {
-  onScan: (decodedText: string) => void;
+  onScan: (decodedText: string) => Promise<void> | void;
   onClose: () => void;
 };
 
 export default function QrScanner({ onScan, onClose }: QrScannerProps) {
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const isMountedRef = useRef(true);
+  const isMountedRef = useRef(false);
+  const isHandlingScanRef = useRef(false);
   const [scannerError, setScannerError] = useState("");
+  const [debugInfo, setDebugInfo] = useState("");
 
   useEffect(() => {
     isMountedRef.current = true;
 
+    const handleDecodedText = async (
+      scanner: Html5Qrcode,
+      decodedText: string
+    ) => {
+      if (!isMountedRef.current || isHandlingScanRef.current) return;
+
+      isHandlingScanRef.current = true;
+      setDebugInfo("QR detectado. Procesando...");
+
+      try {
+        await scanner.stop();
+      } catch (stopError) {
+        console.error("Error deteniendo scanner:", stopError);
+      }
+
+      try {
+        await scanner.clear();
+      } catch (clearError) {
+        console.error("Error limpiando scanner:", clearError);
+      }
+
+      await onScan(decodedText);
+    };
+
     const startScanner = async () => {
       try {
+        if (
+          typeof window === "undefined" ||
+          !navigator.mediaDevices ||
+          !navigator.mediaDevices.getUserMedia
+        ) {
+          setScannerError(
+            "La cámara no está disponible aquí. Asegúrate de estar usando HTTPS o localhost."
+          );
+          return;
+        }
+
+        setDebugInfo("Inicializando cámara...");
+
         const scanner = new Html5Qrcode("qr-reader");
         scannerRef.current = scanner;
 
-        await scanner.start(
-          { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-          },
-          async (decodedText) => {
-            if (!isMountedRef.current) return;
+        try {
+          await scanner.start(
+            { facingMode: "environment" },
+            {
+              fps: 10,
+              qrbox: { width: 250, height: 250 },
+              aspectRatio: 1,
+            },
+            async (decodedText) => {
+              await handleDecodedText(scanner, decodedText);
+            },
+            () => {}
+          );
+        } catch (firstError) {
+          console.warn(
+            "No se pudo usar facingMode environment. Intentando cámara por defecto...",
+            firstError
+          );
 
-            try {
-              await scanner.stop();
-            } catch (stopError) {
-              console.error("Error deteniendo scanner:", stopError);
-            }
+          const cameras = await Html5Qrcode.getCameras();
 
-            onScan(decodedText);
-          },
-          () => {
-            // ignoramos errores de frames mientras busca el QR
+          if (!cameras.length) {
+            throw new Error("No se encontraron cámaras disponibles.");
           }
-        );
+
+          await scanner.start(
+            cameras[0].id,
+            {
+              fps: 10,
+              qrbox: { width: 250, height: 250 },
+              aspectRatio: 1,
+            },
+            async (decodedText) => {
+              await handleDecodedText(scanner, decodedText);
+            },
+            () => {}
+          );
+        }
+
+        setDebugInfo("Cámara activa. Apunta al QR de la factura.");
       } catch (err) {
         console.error("No se pudo iniciar la cámara:", err);
-        setScannerError(
-          "No se pudo abrir la cámara. Verifica permisos y prueba en HTTPS o localhost."
-        );
+
+        let message = "No se pudo abrir la cámara.";
+
+        if (err instanceof Error) {
+          if (err.name === "NotAllowedError") {
+            message =
+              "Permiso de cámara denegado. Debes permitir acceso a la cámara.";
+          } else if (err.name === "NotFoundError") {
+            message = "No se encontró una cámara disponible.";
+          } else if (err.name === "NotReadableError") {
+            message = "La cámara está ocupada por otra app o pestaña.";
+          } else {
+            message = `No se pudo iniciar la cámara: ${err.message}`;
+          }
+        }
+
+        setScannerError(message);
+        setDebugInfo("");
       }
     };
 
@@ -79,7 +152,7 @@ export default function QrScanner({ onScan, onClose }: QrScannerProps) {
         <div>
           <h2 className="text-sm font-semibold text-slate-900">Escanear QR</h2>
           <p className="mt-1 text-xs text-slate-500">
-            Apunta la cámara al QR de la factura.
+            Apunta la cámara al QR de la factura electrónica.
           </p>
         </div>
 
@@ -96,6 +169,12 @@ export default function QrScanner({ onScan, onClose }: QrScannerProps) {
         id="qr-reader"
         className="overflow-hidden rounded-xl border border-slate-200"
       />
+
+      {debugInfo ? (
+        <p className="mt-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+          {debugInfo}
+        </p>
+      ) : null}
 
       {scannerError ? (
         <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">

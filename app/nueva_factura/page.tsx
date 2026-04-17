@@ -11,7 +11,6 @@ import {
   sectionCardClass,
 } from "@/lib/ui";
 import QrScanner from "@/components/qr-scanner";
-import { parseQrFactura } from "@/lib/parse-qr-factura";
 
 type FormState = {
   fecha: string;
@@ -31,6 +30,19 @@ const initialForm: FormState = {
   notas: "",
 };
 
+function isDgiQrUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return (
+      parsed.protocol === "https:" &&
+      parsed.hostname === "dgi-fep.mef.gob.pa" &&
+      parsed.pathname.includes("/Consultas/FacturasPorQR")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export default function NuevaFacturaPage() {
   const [form, setForm] = useState<FormState>(initialForm);
   const [fileName, setFileName] = useState("");
@@ -38,6 +50,7 @@ export default function NuevaFacturaPage() {
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
   const [showScanner, setShowScanner] = useState(false);
+  const [isReadingQr, setIsReadingQr] = useState(false);
 
   const requiredFields: (keyof FormState)[] = [
     "fecha",
@@ -75,25 +88,54 @@ export default function NuevaFacturaPage() {
     }
   };
 
-  const handleQrScan = (decodedText: string) => {
-    const parsed = parseQrFactura(decodedText);
-
-    setForm((prev) => ({
-      ...prev,
-      fecha: parsed.fecha || prev.fecha,
-      proveedor: parsed.proveedor || prev.proveedor,
-      monto: parsed.monto || prev.monto,
-    }));
-
-    setShowScanner(false);
+  const handleQrScan = async (decodedText: string) => {
+    setMensaje("");
     setError("");
 
-    if (parsed.fecha || parsed.proveedor || parsed.monto) {
-      setMensaje("QR leído. Revisa los datos antes de guardar.");
-    } else {
-      setMensaje(
-        "Se leyó el QR, pero no se pudieron identificar campos automáticamente."
+    if (!isDgiQrUrl(decodedText)) {
+      setError("El QR leído no parece ser una factura electrónica válida de la DGI.");
+      setShowScanner(false);
+      return;
+    }
+
+    setIsReadingQr(true);
+
+    try {
+      const res = await fetch("/api/facturas/leer-qr", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: decodedText }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "No se pudo leer la factura desde la DGI.");
+      }
+
+      const factura = data.data;
+
+      setForm((prev) => ({
+        ...prev,
+        fecha: factura.fecha || prev.fecha,
+        proveedor: factura.proveedor || prev.proveedor,
+        monto: factura.monto || prev.monto,
+      }));
+
+      setMensaje("Factura leída desde la DGI. Revisa los datos antes de guardar.");
+      setShowScanner(false);
+    } catch (err) {
+      console.error("Error procesando QR:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Ocurrió un error leyendo el QR."
       );
+      setShowScanner(false);
+    } finally {
+      setIsReadingQr(false);
     }
   };
 
@@ -167,11 +209,17 @@ export default function NuevaFacturaPage() {
             <button
               type="button"
               onClick={() => setShowScanner((prev) => !prev)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isReadingQr}
               className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-indigo-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {showScanner ? "Ocultar escáner" : "Escanear QR"}
+              {showScanner ? "Ocultar escáner" : "Escanear QR DGI"}
             </button>
+
+            {isReadingQr ? (
+              <span className="inline-flex items-center rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700">
+                Consultando la DGI...
+              </span>
+            ) : null}
           </div>
 
           {showScanner ? (
