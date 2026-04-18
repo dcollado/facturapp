@@ -5,9 +5,9 @@ export type Factura = {
   monto: string;
   categoria: string;
   tipo: string;
-  notas: string;
   mes: string;
   anio: string;
+  numeroFactura?: string;
+  ruc?: string;
+  notas?: string;
 };
-
-export const facturasStore: Factura[] = [];
