@@ -10,6 +10,7 @@ type QrLookupResponse = {
     tipo: string;
     numeroFactura?: string;
     ruc?: string;
+    debugPreview?: string;
   };
   message?: string;
 };
@@ -19,6 +20,7 @@ function cleanText(value?: string | null): string {
 
   return value
     .replace(/\u00a0/g, " ")
+    .replace(/&nbsp;/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -26,9 +28,8 @@ function cleanText(value?: string | null): string {
 function normalizeDate(value: string): string {
   if (!value) return "";
 
-  // Ej: 13/04/2026 12:55:29
   const match = value.match(
-    /^(\d{2})\/(\d{2})\/(\d{4})(?:\s+\d{2}:\d{2}:\d{2})?$/
+    /(\d{2})\/(\d{2})\/(\d{4})(?:\s+\d{2}:\d{2}:\d{2})?/
   );
 
   if (!match) return "";
@@ -40,9 +41,7 @@ function normalizeDate(value: string): string {
 function normalizeAmount(value: string): string {
   if (!value) return "";
 
-  return value
-    .replace(/[^\d,.-]/g, "")
-    .replace(",", ".");
+  return value.replace(/[^\d,.-]/g, "").replace(",", ".");
 }
 
 function isValidDgiUrl(url: string): boolean {
@@ -59,65 +58,15 @@ function isValidDgiUrl(url: string): boolean {
   }
 }
 
-function findValueNearLabel(
-  $: cheerio.CheerioAPI,
-  labelVariants: string[]
-): string {
-  const normalizedLabels = labelVariants.map((label) => label.toLowerCase());
+function getBodyText($: cheerio.CheerioAPI): string {
+  const clone = $.root().clone();
+  clone.find("script, style, noscript").remove();
+  return cleanText(clone.text());
+}
 
-  let found = "";
-
-  $("tr, .row, div, td, th, span, p, label").each((_, el) => {
-    if (found) return;
-
-    const currentText = cleanText($(el).text());
-    const currentLower = currentText.toLowerCase();
-
-    const matchesLabel = normalizedLabels.some((label) =>
-      currentLower.includes(label)
-    );
-
-    if (!matchesLabel) return;
-
-    // 1) Si es una fila tipo tabla, intenta siguiente celda
-    const nextTd = cleanText($(el).next("td").text());
-    if (nextTd && nextTd.toLowerCase() !== currentLower) {
-      found = nextTd;
-      return;
-    }
-
-    // 2) Si está dentro de un tr, toma la última celda
-    const rowTds = $(el).closest("tr").find("td");
-    if (rowTds.length >= 2) {
-      const lastTd = cleanText(rowTds.last().text());
-      if (lastTd) {
-        found = lastTd;
-        return;
-      }
-    }
-
-    // 3) Siguiente hermano
-    const nextSiblingText = cleanText($(el).next().text());
-    if (nextSiblingText && nextSiblingText.toLowerCase() !== currentLower) {
-      found = nextSiblingText;
-      return;
-    }
-
-    // 4) Busca en el padre
-    const parentText = cleanText($(el).parent().text());
-    if (parentText && parentText.toLowerCase() !== currentLower) {
-      const withoutLabel = normalizedLabels.reduce((acc, label) => {
-        return acc.replace(new RegExp(label, "ig"), "");
-      }, parentText);
-
-      const cleaned = cleanText(withoutLabel.replace(/[:：]/g, ""));
-      if (cleaned) {
-        found = cleaned;
-      }
-    }
-  });
-
-  return found;
+function extractRegexValue(text: string, pattern: RegExp): string {
+  const match = text.match(pattern);
+  return cleanText(match?.[1] || "");
 }
 
 export async function POST(req: NextRequest) {
@@ -165,40 +114,50 @@ export async function POST(req: NextRequest) {
 
     const html = await response.text();
     const $ = cheerio.load(html);
+    const bodyText = getBodyText($);
 
-    const fechaRaw = findValueNearLabel($, [
-      "fecha de factura",
-      "fecha de emisión",
-      "fecha de emision",
-      "fecha",
-    ]);
+    const fechaRaw = extractRegexValue(
+      bodyText,
+      /FACTURA\s+(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2})/i
+    );
 
-    const proveedor = findValueNearLabel($, [
-      "nombre del emisor",
-      "emisor",
-      "nombre comercial del emisor",
-      "nombre comercial",
-    ]);
+    const numeroFactura = extractRegexValue(
+      bodyText,
+      /No\.\s*([0-9]+)/i
+    );
 
-    const montoRaw = findValueNearLabel($, [
-      "valor total",
-      "total pagado",
-      "total",
-    ]);
+    const ruc = extractRegexValue(
+      bodyText,
+      /EMISOR\s+RUC\s*([0-9\-]+)/i
+    );
 
-    const numeroFactura = findValueNearLabel($, [
-      "número de factura",
-      "numero de factura",
-      "factura",
-    ]);
+    const proveedor = extractRegexValue(
+      bodyText,
+      /EMISOR[\s\S]*?NOMBRE\s*([A-ZÁÉÍÓÚÑ0-9 .,&'-]+?)\s*DIRECCIÓN/i
+    );
 
-    const ruc = findValueNearLabel($, [
-      "ruc del emisor",
-      "ruc",
-    ]);
+    const montoRaw =
+      extractRegexValue(
+        bodyText,
+        /TOTAL PAGADO:\s*([0-9]+(?:\.[0-9]{1,2})?)/i
+      ) ||
+      extractRegexValue(
+        bodyText,
+        /Valor Total:\s*([0-9]+(?:\.[0-9]{1,2})?)/i
+      );
 
     const fecha = normalizeDate(fechaRaw);
     const monto = normalizeAmount(montoRaw);
+
+    console.log("DGI extracción:", {
+      fechaRaw,
+      fecha,
+      proveedor,
+      montoRaw,
+      monto,
+      numeroFactura,
+      ruc,
+    });
 
     if (!fecha && !proveedor && !monto) {
       return NextResponse.json<QrLookupResponse>(
@@ -206,6 +165,13 @@ export async function POST(req: NextRequest) {
           success: false,
           message:
             "Se consultó la DGI, pero no se pudieron extraer datos útiles de la factura.",
+          data: {
+            fecha: "",
+            proveedor: "",
+            monto: "",
+            tipo: "Fiscal",
+            debugPreview: bodyText.slice(0, 2000),
+          },
         },
         { status: 422 }
       );

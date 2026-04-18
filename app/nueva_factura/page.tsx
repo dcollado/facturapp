@@ -6,7 +6,6 @@ import {
   fieldBaseClass,
   fieldNormalClass,
   fieldErrorClass,
-  helperTextClass,
   labelClass,
   sectionCardClass,
 } from "@/lib/ui";
@@ -19,6 +18,8 @@ type FormState = {
   categoria: string;
   tipo: string;
   notas: string;
+  numeroFactura: string;
+  ruc: string;
 };
 
 const initialForm: FormState = {
@@ -28,6 +29,8 @@ const initialForm: FormState = {
   categoria: "",
   tipo: "",
   notas: "",
+  numeroFactura: "",
+  ruc: "",
 };
 
 function isDgiQrUrl(value: string): boolean {
@@ -45,12 +48,14 @@ function isDgiQrUrl(value: string): boolean {
 
 export default function NuevaFacturaPage() {
   const [form, setForm] = useState<FormState>(initialForm);
-  const [fileName, setFileName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
+  const [debugInfo, setDebugInfo] = useState("");
   const [showScanner, setShowScanner] = useState(false);
   const [isReadingQr, setIsReadingQr] = useState(false);
+  const [dgiUrl, setDgiUrl] = useState("");
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   const requiredFields: (keyof FormState)[] = [
     "fecha",
@@ -61,8 +66,7 @@ export default function NuevaFacturaPage() {
   ];
 
   const hasError = (field: keyof FormState) => {
-    if (!error) return false;
-    return requiredFields.includes(field) && !form[field];
+    return showValidationErrors && requiredFields.includes(field) && !form[field];
   };
 
   const getFieldClass = (field: keyof FormState) =>
@@ -83,18 +87,37 @@ export default function NuevaFacturaPage() {
       [name]: value,
     }));
 
-    if (error) {
-      setError("");
-    }
+    if (error) setError("");
+    if (showValidationErrors) setShowValidationErrors(false);
   };
 
-  const handleQrScan = async (decodedText: string) => {
+  const applyFacturaData = (factura: {
+    fecha?: string;
+    proveedor?: string;
+    monto?: string;
+    numeroFactura?: string;
+    ruc?: string;
+  }) => {
+    setForm((prev) => ({
+      ...prev,
+      fecha: factura.fecha || prev.fecha,
+      proveedor: factura.proveedor || prev.proveedor,
+      monto: factura.monto || prev.monto,
+      numeroFactura: factura.numeroFactura || prev.numeroFactura,
+      ruc: factura.ruc || prev.ruc,
+      tipo: "Fiscal",
+    }));
+  };
+
+  const readDgiUrl = async (url: string) => {
     setMensaje("");
     setError("");
+    setDebugInfo("");
 
-    if (!isDgiQrUrl(decodedText)) {
-      setError("El QR leído no parece ser una factura electrónica válida de la DGI.");
-      setShowScanner(false);
+    const trimmedUrl = url.trim();
+
+    if (!isDgiQrUrl(trimmedUrl)) {
+      setError("El link no parece ser una URL válida de la DGI.");
       return;
     }
 
@@ -106,52 +129,68 @@ export default function NuevaFacturaPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ url: decodedText }),
+        body: JSON.stringify({ url: trimmedUrl }),
       });
 
       const data = await res.json();
+      console.log("Respuesta leer-qr:", data);
 
       if (!res.ok || !data.success) {
-        throw new Error(data.message || "No se pudo leer la factura desde la DGI.");
+        setError(data.message || "No se pudo leer la factura desde la DGI.");
+        setDebugInfo(data?.data?.debugPreview || "");
+        return;
       }
 
-      const factura = data.data;
-
-      setForm((prev) => ({
-        ...prev,
-        fecha: factura.fecha || prev.fecha,
-        proveedor: factura.proveedor || prev.proveedor,
-        monto: factura.monto || prev.monto,
-        tipo: "Fiscal",
-      }));
-
+      applyFacturaData(data.data);
       setMensaje(
-        "Factura fiscal leída desde la DGI. Revisa fecha, proveedor y monto antes de guardar."
+        "Factura fiscal leída desde la DGI. Revisa fecha, proveedor, monto, número y RUC antes de guardar."
       );
       setShowScanner(false);
+      setDebugInfo("");
     } catch (err) {
-      console.error("Error procesando QR:", err);
+      console.error("Error leyendo link DGI:", err);
       setError(
         err instanceof Error
           ? err.message
-          : "Ocurrió un error leyendo el QR."
+          : "Ocurrió un error leyendo el link de la DGI."
       );
-      setShowScanner(false);
     } finally {
       setIsReadingQr(false);
     }
+  };
+
+  const handleQrScan = async (decodedText: string) => {
+    setMensaje("");
+    setError("");
+    setDebugInfo("");
+
+    if (!isDgiQrUrl(decodedText)) {
+      setError("El QR leído no parece ser una factura electrónica válida de la DGI.");
+      setShowScanner(false);
+      return;
+    }
+
+    setDgiUrl(decodedText);
+    await readDgiUrl(decodedText);
+  };
+
+  const handleReadPastedUrl = async () => {
+    await readDgiUrl(dgiUrl);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setMensaje("");
     setError("");
+    setDebugInfo("");
 
     if (requiredFields.some((field) => !form[field])) {
+      setShowValidationErrors(true);
       setError("Completa los campos obligatorios.");
       return;
     }
 
+    setShowValidationErrors(false);
     setIsSubmitting(true);
 
     try {
@@ -172,8 +211,8 @@ export default function NuevaFacturaPage() {
 
       setMensaje("Factura guardada correctamente.");
       setForm(initialForm);
-      setFileName("");
       setShowScanner(false);
+      setDgiUrl("");
     } catch (err) {
       console.error("Error al enviar factura:", err);
       setError(
@@ -191,13 +230,14 @@ export default function NuevaFacturaPage() {
       <div className="mx-auto max-w-3xl">
         <div className={sectionCardClass}>
           <div className="mb-6 flex items-start justify-between gap-4">
-            <div>
+            <div className="flex-1">
               <h1 className="text-2xl font-bold tracking-tight text-slate-900">
                 Nueva factura
               </h1>
               <p className="mt-1 text-sm text-slate-600">
                 Registra una factura manualmente y organízala por tipo, mes y año.
               </p>
+             
             </div>
 
             <a
@@ -207,22 +247,72 @@ export default function NuevaFacturaPage() {
               Ver facturas
             </a>
           </div>
+{mensaje ? (
+  <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+    {mensaje}
+  </div>
+) : null}
 
-          <div className="mb-5 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => setShowScanner((prev) => !prev)}
-              disabled={isSubmitting || isReadingQr}
-              className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-indigo-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {showScanner ? "Ocultar escáner" : "Escanear QR DGI"}
-            </button>
+{error ? (
+  <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    {error}
+  </div>
+) : null}
 
-            {isReadingQr ? (
-              <span className="inline-flex items-center rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700">
-                Consultando la DGI...
-              </span>
-            ) : null}
+{debugInfo ? (
+  <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+    <p className="mb-2 text-sm font-medium text-amber-800">DEBUG</p>
+    <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words text-xs text-amber-900">
+      {debugInfo}
+    </pre>
+  </div>
+) : null}
+
+          <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4">
+            <label htmlFor="dgiUrl" className={labelClass}>
+              Link consulta DGI
+            </label>
+
+            <div className="mt-2">
+              <input
+                id="dgiUrl"
+                type="url"
+                value={dgiUrl}
+                onChange={(e) => {
+                  setDgiUrl(e.target.value);
+                  if (error) setError("");
+                }}
+                placeholder="Pega aquí el link de consulta de la DGI"
+                className={`${fieldBaseClass} ${fieldNormalClass} w-full`}
+                disabled={isSubmitting || isReadingQr}
+              />
+            </div>
+
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={handleReadPastedUrl}
+                disabled={isSubmitting || isReadingQr || !dgiUrl.trim()}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-indigo-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Leer link DGI
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowScanner((prev) => !prev)}
+                disabled={isSubmitting || isReadingQr}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-indigo-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {showScanner ? "Ocultar escáner" : "Escanear QR DGI"}
+              </button>
+
+              {isReadingQr ? (
+                <span className="inline-flex items-center rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                  Consultando la DGI...
+                </span>
+              ) : null}
+            </div>
           </div>
 
           {showScanner ? (
@@ -265,6 +355,40 @@ export default function NuevaFacturaPage() {
                   min="0"
                   placeholder="0.00"
                   className={getFieldClass("monto")}
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <div>
+                <label htmlFor="numeroFactura" className={labelClass}>
+                  Número factura
+                </label>
+                <input
+                  id="numeroFactura"
+                  type="text"
+                  name="numeroFactura"
+                  value={form.numeroFactura}
+                  onChange={handleChange}
+                  placeholder="Ej. 0000004939"
+                  className={`${fieldBaseClass} ${fieldNormalClass}`}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="ruc" className={labelClass}>
+                  RUC
+                </label>
+                <input
+                  id="ruc"
+                  type="text"
+                  name="ruc"
+                  value={form.ruc}
+                  onChange={handleChange}
+                  placeholder="Ej. 1470859-1-641924"
+                  className={`${fieldBaseClass} ${fieldNormalClass}`}
                   disabled={isSubmitting}
                 />
               </div>
@@ -337,42 +461,6 @@ export default function NuevaFacturaPage() {
             </div>
 
             <div>
-              <label htmlFor="archivo" className={labelClass}>
-                Archivo
-              </label>
-
-              <label
-                htmlFor="archivo"
-                className={`flex cursor-pointer items-center justify-between rounded-xl border border-dashed px-4 py-3 text-sm transition ${
-                  fileName
-                    ? "border-indigo-500 bg-indigo-50 text-slate-900"
-                    : "border-slate-300 bg-white text-slate-500 hover:border-indigo-400 hover:bg-slate-50"
-                }`}
-              >
-                <span className="truncate pr-4">
-                  {fileName ? fileName : "Selecciona una imagen o PDF"}
-                </span>
-                <span className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700">
-                  Explorar
-                </span>
-              </label>
-
-              <input
-                id="archivo"
-                type="file"
-                accept=".jpg,.jpeg,.png,.pdf"
-                className="hidden"
-                disabled={isSubmitting}
-                onChange={(e) => setFileName(e.target.files?.[0]?.name ?? "")}
-              />
-
-              <p className={helperTextClass}>
-                Por ahora el archivo no se está guardando todavía. Estamos dejando
-                listo el UI sin romper el guardado actual.
-              </p>
-            </div>
-
-            <div>
               <label htmlFor="notas" className={labelClass}>
                 Notas
               </label>
@@ -387,18 +475,6 @@ export default function NuevaFacturaPage() {
                 disabled={isSubmitting}
               />
             </div>
-
-            {mensaje ? (
-              <p className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-                {mensaje}
-              </p>
-            ) : null}
-
-            {error ? (
-              <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {error}
-              </p>
-            ) : null}
 
             <div className="flex flex-col gap-3 pt-1 sm:flex-row">
               <button

@@ -1,5 +1,6 @@
 export const categoriasFactura = [
   "Supermercado",
+  "Restaurantes",
   "Combustible",
   "Servicios",
   "Software",

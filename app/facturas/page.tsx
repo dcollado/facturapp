@@ -2,364 +2,310 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Factura } from "@/lib/facturas-store";
-import { categoriasFactura, tiposFactura } from "@/lib/facturas";
-
-function normalizarMes(valor: string) {
-  const limpio = String(valor ?? "").trim().toLowerCase();
-
-  const mapa: Record<string, string> = {
-    "1": "01",
-    "01": "01",
-    enero: "01",
-    "2": "02",
-    "02": "02",
-    febrero: "02",
-    "3": "03",
-    "03": "03",
-    marzo: "03",
-    "4": "04",
-    "04": "04",
-    abril: "04",
-    "5": "05",
-    "05": "05",
-    mayo: "05",
-    "6": "06",
-    "06": "06",
-    junio: "06",
-    "7": "07",
-    "07": "07",
-    julio: "07",
-    "8": "08",
-    "08": "08",
-    agosto: "08",
-    "9": "09",
-    "09": "09",
-    septiembre: "09",
-    setiembre: "09",
-    "10": "10",
-    octubre: "10",
-    "11": "11",
-    noviembre: "11",
-    "12": "12",
-    diciembre: "12",
-  };
-
-  return mapa[limpio] || limpio;
-}
-
-function nombreMes(mes: string) {
-  const meses: Record<string, string> = {
-    "01": "Enero",
-    "02": "Febrero",
-    "03": "Marzo",
-    "04": "Abril",
-    "05": "Mayo",
-    "06": "Junio",
-    "07": "Julio",
-    "08": "Agosto",
-    "09": "Septiembre",
-    "10": "Octubre",
-    "11": "Noviembre",
-    "12": "Diciembre",
-  };
-
-  return meses[normalizarMes(mes)] || mes;
-}
+import {
+  fieldBaseClass,
+  fieldNormalClass,
+  helperTextClass,
+  labelClass,
+  sectionCardClass,
+} from "@/lib/ui";
 
 export default function FacturasPage() {
   const [facturas, setFacturas] = useState<Factura[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [mensaje, setMensaje] = useState("");
 
-  const [filtroTipo, setFiltroTipo] = useState("");
-  const [filtroCategoria, setFiltroCategoria] = useState("");
-  const [filtroMes, setFiltroMes] = useState("");
-  const [filtroAnio, setFiltroAnio] = useState("");
+  const [mesFiltro, setMesFiltro] = useState("");
+  const [anioFiltro, setAnioFiltro] = useState("");
+  const [tipoFiltro, setTipoFiltro] = useState("");
+  const [categoriaFiltro, setCategoriaFiltro] = useState("");
+
+  const [facturaAEliminar, setFacturaAEliminar] = useState<Factura | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const cargarFacturas = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/facturas");
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "No se pudieron cargar las facturas.");
+      }
+
+      setFacturas(data.data ?? []);
+    } catch (err) {
+      console.error("Error cargando facturas:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Ocurrió un error cargando las facturas."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const cargarFacturas = async () => {
-      try {
-        const res = await fetch("/api/facturas");
-        const data = await res.json();
-        setFacturas(data.data ?? []);
-      } catch (error) {
-        console.error("Error cargando facturas:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     cargarFacturas();
   }, []);
 
-  const aniosDisponibles = useMemo(() => {
-    return Array.from(
-      new Set(facturas.map((f) => String(f.anio ?? "").trim()).filter(Boolean))
-    ).sort((a, b) => b.localeCompare(a));
-  }, [facturas]);
-
-  const categoriasDisponibles = useMemo(() => {
-    const categoriasEnFacturas = Array.from(
-      new Set(
-        facturas.map((f) => String(f.categoria ?? "").trim()).filter(Boolean)
-      )
-    );
-
-    return categoriasFactura.filter((categoria) =>
-      categoriasEnFacturas.includes(categoria)
-    );
-  }, [facturas]);
-
   const facturasFiltradas = useMemo(() => {
     return facturas.filter((factura) => {
-      const tipo = String(factura.tipo ?? "").trim();
-      const categoria = String(factura.categoria ?? "").trim();
-      const mes = normalizarMes(String(factura.mes ?? ""));
-      const anio = String(factura.anio ?? "").trim();
+      const matchMes = mesFiltro ? factura.mes === mesFiltro : true;
+      const matchAnio = anioFiltro ? factura.anio === anioFiltro : true;
+      const matchTipo = tipoFiltro ? factura.tipo === tipoFiltro : true;
+      const matchCategoria = categoriaFiltro
+        ? factura.categoria === categoriaFiltro
+        : true;
 
-      const okTipo = filtroTipo ? tipo === filtroTipo : true;
-      const okCategoria = filtroCategoria ? categoria === filtroCategoria : true;
-      const okMes = filtroMes ? mes === filtroMes : true;
-      const okAnio = filtroAnio ? anio === filtroAnio : true;
-
-      return okTipo && okCategoria && okMes && okAnio;
+      return matchMes && matchAnio && matchTipo && matchCategoria;
     });
-  }, [facturas, filtroTipo, filtroCategoria, filtroMes, filtroAnio]);
+  }, [facturas, mesFiltro, anioFiltro, tipoFiltro, categoriaFiltro]);
 
-  const totalFiltrado = useMemo(() => {
-    return facturasFiltradas.reduce((acc, f) => {
-      return acc + (Number(f.monto) || 0);
-    }, 0);
-  }, [facturasFiltradas]);
+  const meses = Array.from(new Set(facturas.map((f) => f.mes).filter(Boolean))).sort();
+  const anios = Array.from(new Set(facturas.map((f) => f.anio).filter(Boolean))).sort();
+  const tipos = Array.from(new Set(facturas.map((f) => f.tipo).filter(Boolean))).sort();
+  const categorias = Array.from(
+    new Set(facturas.map((f) => f.categoria).filter(Boolean))
+  ).sort();
 
-  const categoriasUsadas = useMemo(() => {
-    return new Set(facturasFiltradas.map((f) => f.categoria)).size;
-  }, [facturasFiltradas]);
+  const confirmarEliminar = async () => {
+    if (!facturaAEliminar) return;
+
+    setIsDeleting(true);
+    setError("");
+    setMensaje("");
+
+    try {
+      const res = await fetch(
+        `/api/facturas?id=${encodeURIComponent(facturaAEliminar.id)}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "No se pudo eliminar la factura.");
+      }
+
+      setFacturas((prev) =>
+        prev.filter((factura) => factura.id !== facturaAEliminar.id)
+      );
+
+      setMensaje("Factura eliminada correctamente.");
+      setFacturaAEliminar(null);
+    } catch (err) {
+      console.error("Error eliminando factura:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Ocurrió un error eliminando la factura."
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-slate-50 p-6">
       <div className="mx-auto max-w-6xl">
-        <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:justify-between">
+        <div className={sectionCardClass}>
+          <div className="mb-6 flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold text-slate-900">
-                Historial de facturas
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                Facturas
               </h1>
-              <p className="mt-3 text-slate-600">
-                Consulta, filtra y revisa todas tus facturas.
+              <p className="mt-1 text-sm text-slate-600">
+                Consulta, filtra y elimina facturas guardadas.
               </p>
             </div>
 
-            
+            <a
+              href="/nueva_factura"
+              className="hidden rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-indigo-400 hover:bg-slate-50 md:inline-flex"
+            >
+              Nueva factura
+            </a>
           </div>
-        </section>
 
-        <section className="mt-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-5">
-            <p className="text-sm text-indigo-600">Total facturas</p>
-            <p className="mt-2 text-3xl font-bold text-slate-900">
-              {loading ? "..." : facturasFiltradas.length}
+          {mensaje ? (
+            <p className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+              {mensaje}
             </p>
-          </div>
+          ) : null}
 
-          <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5">
-            <p className="text-sm text-blue-600">Monto</p>
-            <p className="mt-2 text-3xl font-bold text-slate-900">
-              {loading ? "..." : `$${totalFiltrado.toFixed(2)}`}
+          {error ? (
+            <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
             </p>
-          </div>
+          ) : null}
 
-          <div className="rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50 to-white p-5">
-            <p className="text-sm text-purple-600">Categorías</p>
-            <p className="mt-2 text-3xl font-bold text-slate-900">
-              {loading ? "..." : categoriasUsadas}
-            </p>
-          </div>
-        </section>
-
-        <section className="mt-6 rounded-2xl border bg-white p-5 shadow-sm">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Filtros</h2>
-            <p className="mt-1 text-sm text-slate-600">
-              Refina el listado por tipo, categoría, mes y año.
-            </p>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mb-6 grid gap-4 md:grid-cols-4">
             <div>
-              <label
-                htmlFor="filtro-tipo"
-                className="mb-1.5 block text-sm font-medium text-slate-800"
-              >
-                Tipo
-              </label>
+              <label className={labelClass}>Mes</label>
               <select
-                id="filtro-tipo"
-                value={filtroTipo}
-                onChange={(e) => setFiltroTipo(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none hover:border-indigo-400 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100"
+                value={mesFiltro}
+                onChange={(e) => setMesFiltro(e.target.value)}
+                className={`${fieldBaseClass} ${fieldNormalClass} appearance-none`}
               >
-                <option value="">Todos los tipos</option>
-                {tiposFactura.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+                <option value="">Todos</option>
+                {meses.map((mes) => (
+                  <option key={mes} value={mes}>
+                    {mes}
                   </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label
-                htmlFor="filtro-categoria"
-                className="mb-1.5 block text-sm font-medium text-slate-800"
-              >
-                Categoría
-              </label>
+              <label className={labelClass}>Año</label>
               <select
-                id="filtro-categoria"
-                value={filtroCategoria}
-                onChange={(e) => setFiltroCategoria(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none hover:border-indigo-400 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100"
+                value={anioFiltro}
+                onChange={(e) => setAnioFiltro(e.target.value)}
+                className={`${fieldBaseClass} ${fieldNormalClass} appearance-none`}
               >
-                <option value="">Todas las categorías</option>
-                {categoriasDisponibles.map((categoria) => (
+                <option value="">Todos</option>
+                {anios.map((anio) => (
+                  <option key={anio} value={anio}>
+                    {anio}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className={labelClass}>Tipo</label>
+              <select
+                value={tipoFiltro}
+                onChange={(e) => setTipoFiltro(e.target.value)}
+                className={`${fieldBaseClass} ${fieldNormalClass} appearance-none`}
+              >
+                <option value="">Todos</option>
+                {tipos.map((tipo) => (
+                  <option key={tipo} value={tipo}>
+                    {tipo}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className={labelClass}>Categoría</label>
+              <select
+                value={categoriaFiltro}
+                onChange={(e) => setCategoriaFiltro(e.target.value)}
+                className={`${fieldBaseClass} ${fieldNormalClass} appearance-none`}
+              >
+                <option value="">Todas</option>
+                {categorias.map((categoria) => (
                   <option key={categoria} value={categoria}>
                     {categoria}
                   </option>
                 ))}
               </select>
             </div>
+          </div>
 
-            <div>
-              <label
-                htmlFor="filtro-mes"
-                className="mb-1.5 block text-sm font-medium text-slate-800"
-              >
-                Mes
-              </label>
-              <select
-                id="filtro-mes"
-                value={filtroMes}
-                onChange={(e) => setFiltroMes(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none hover:border-indigo-400 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100"
-              >
-                <option value="">Todos los meses</option>
-                <option value="01">Enero</option>
-                <option value="02">Febrero</option>
-                <option value="03">Marzo</option>
-                <option value="04">Abril</option>
-                <option value="05">Mayo</option>
-                <option value="06">Junio</option>
-                <option value="07">Julio</option>
-                <option value="08">Agosto</option>
-                <option value="09">Septiembre</option>
-                <option value="10">Octubre</option>
-                <option value="11">Noviembre</option>
-                <option value="12">Diciembre</option>
-              </select>
+          {loading ? (
+            <p className={helperTextClass}>Cargando facturas...</p>
+          ) : facturasFiltradas.length === 0 ? (
+            <p className={helperTextClass}>No hay facturas para mostrar.</p>
+          ) : (
+            <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium text-slate-600">Fecha</th>
+                    <th className="px-4 py-3 text-left font-medium text-slate-600">Proveedor</th>
+                    <th className="px-4 py-3 text-left font-medium text-slate-600">Monto</th>
+                    <th className="px-4 py-3 text-left font-medium text-slate-600">Categoría</th>
+                    <th className="px-4 py-3 text-left font-medium text-slate-600">Tipo</th>
+                    <th className="px-4 py-3 text-left font-medium text-slate-600">No. factura</th>
+                    <th className="px-4 py-3 text-left font-medium text-slate-600">RUC</th>
+                    <th className="px-4 py-3 text-right font-medium text-slate-600">Acciones</th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-slate-100">
+                  {facturasFiltradas.map((factura) => (
+                    <tr key={factura.id} className="bg-white">
+                      <td className="px-4 py-3 text-slate-700">{factura.fecha}</td>
+                      <td className="px-4 py-3 text-slate-700">{factura.proveedor}</td>
+                      <td className="px-4 py-3 text-slate-700">{factura.monto}</td>
+                      <td className="px-4 py-3 text-slate-700">{factura.categoria}</td>
+                      <td className="px-4 py-3 text-slate-700">{factura.tipo}</td>
+                      <td className="px-4 py-3 text-slate-700">{factura.numeroFactura ?? ""}</td>
+                      <td className="px-4 py-3 text-slate-700">{factura.ruc ?? ""}</td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setFacturaAEliminar(factura)}
+                          className="inline-flex items-center justify-center rounded-xl border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {facturaAEliminar ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="text-lg font-semibold text-slate-900">
+              ¿Eliminar factura?
+            </h2>
+
+            <p className="mt-2 text-sm text-slate-600">
+              Esta acción eliminará la factura de Google Sheets y no se puede deshacer.
+            </p>
+
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+              <p>
+                <span className="font-medium">Proveedor:</span>{" "}
+                {facturaAEliminar.proveedor || "Sin proveedor"}
+              </p>
+              <p className="mt-1">
+                <span className="font-medium">Fecha:</span> {facturaAEliminar.fecha}
+              </p>
+              <p className="mt-1">
+                <span className="font-medium">Monto:</span> {facturaAEliminar.monto}
+              </p>
             </div>
 
-            <div>
-              <label
-                htmlFor="filtro-anio"
-                className="mb-1.5 block text-sm font-medium text-slate-800"
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setFacturaAEliminar(null)}
+                disabled={isDeleting}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Año
-              </label>
-              <select
-                id="filtro-anio"
-                value={filtroAnio}
-                onChange={(e) => setFiltroAnio(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none hover:border-indigo-400 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100"
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmarEliminar}
+                disabled={isDeleting}
+                className="inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <option value="">Todos los años</option>
-                {aniosDisponibles.map((a) => (
-                  <option key={a} value={a}>
-                    {a}
-                  </option>
-                ))}
-              </select>
+                {isDeleting ? "Eliminando..." : "Sí, eliminar"}
+              </button>
             </div>
           </div>
-        </section>
-
-        <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-
-  {loading ? (
-    <div className="p-6 text-sm text-slate-500">Cargando...</div>
-  ) : facturasFiltradas.length === 0 ? (
-    <div className="p-6 text-sm text-slate-500">
-      No hay facturas
-    </div>
-  ) : (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-
-        {/* HEADER */}
-        <thead className="bg-gradient-to-r from-slate-50 to-slate-100 text-left text-xs uppercase tracking-wide text-slate-600">
-          <tr>
-            <th className="px-4 py-3">Fecha</th>
-            <th className="px-4 py-3">Proveedor</th>
-            <th className="px-4 py-3">Monto</th>
-            <th className="px-4 py-3">Categoría</th>
-            <th className="px-4 py-3">Tipo</th>
-            <th className="px-4 py-3">Mes</th>
-            <th className="px-4 py-3">Año</th>
-          </tr>
-        </thead>
-
-        {/* BODY */}
-        <tbody>
-          {facturasFiltradas.map((f) => (
-            <tr
-              key={f.id}
-              className="border-t border-slate-200 transition hover:bg-indigo-50/40"
-            >
-              {/* FECHA */}
-              <td className="px-4 py-3 text-slate-700">
-                {f.fecha}
-              </td>
-
-              {/* PROVEEDOR */}
-              <td className="px-4 py-3 font-medium text-slate-900">
-                {f.proveedor}
-              </td>
-
-              {/* MONTO */}
-              <td className="px-4 py-3 font-semibold text-slate-900">
-                ${Number(f.monto).toFixed(2)}
-              </td>
-
-              {/* CATEGORÍA */}
-              <td className="px-4 py-3">
-                <span className="inline-flex rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-medium text-indigo-700">
-                  {f.categoria}
-                </span>
-              </td>
-
-              {/* TIPO */}
-              <td className="px-4 py-3 text-slate-700">
-                {f.tipo}
-              </td>
-
-              {/* MES */}
-              <td className="px-4 py-3 text-slate-700">
-                {nombreMes(f.mes)}
-              </td>
-
-              {/* AÑO */}
-              <td className="px-4 py-3 text-slate-700">
-                {f.anio}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-
-      </table>
-    </div>
-  )}
-
-</section>
-      </div>
+        </div>
+      ) : null}
     </main>
   );
 }
