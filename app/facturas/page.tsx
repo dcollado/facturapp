@@ -113,35 +113,35 @@ export default function FacturasPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6">
+    <main className="min-h-screen bg-ink p-6">
       <div className="mx-auto max-w-6xl">
         <div className={sectionCardClass}>
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              <h1 className="font-display text-2xl font-bold tracking-tight text-text">
                 Facturas
               </h1>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-text-muted">
                 Consulta, filtra y elimina facturas guardadas.
               </p>
             </div>
 
             <a
               href="/nueva_factura"
-              className="hidden rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-indigo-400 hover:bg-slate-50 md:inline-flex"
+              className="hidden rounded-xl border border-line bg-surface px-4 py-2 text-sm font-medium text-text transition hover:border-gold hover:bg-surface-raised md:inline-flex"
             >
               Nueva factura
             </a>
           </div>
 
           {mensaje ? (
-            <p className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+            <p className="mb-4 rounded-xl border border-sage/30 bg-sage-soft px-4 py-3 text-sm text-sage">
               {mensaje}
             </p>
           ) : null}
 
           {error ? (
-            <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <p className="mb-4 rounded-xl border border-rust/30 bg-rust-soft px-4 py-3 text-sm text-rust">
               {error}
             </p>
           ) : null}
@@ -217,36 +217,36 @@ export default function FacturasPage() {
           ) : facturasFiltradas.length === 0 ? (
             <p className={helperTextClass}>No hay facturas para mostrar.</p>
           ) : (
-            <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="bg-slate-50">
+            <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
+              <table className="min-w-full divide-y divide-line text-sm">
+                <thead className="bg-surface-raised">
                   <tr>
-                    <th className="px-4 py-3 text-left font-medium text-slate-600">Fecha</th>
-                    <th className="px-4 py-3 text-left font-medium text-slate-600">Proveedor</th>
-                    <th className="px-4 py-3 text-left font-medium text-slate-600">Monto</th>
-                    <th className="px-4 py-3 text-left font-medium text-slate-600">Categoría</th>
-                    <th className="px-4 py-3 text-left font-medium text-slate-600">Tipo</th>
-                    <th className="px-4 py-3 text-left font-medium text-slate-600">No. factura</th>
-                    <th className="px-4 py-3 text-left font-medium text-slate-600">RUC</th>
-                    <th className="px-4 py-3 text-right font-medium text-slate-600">Acciones</th>
+                    <th className="px-4 py-3 text-left font-medium text-text-muted">Fecha</th>
+                    <th className="px-4 py-3 text-left font-medium text-text-muted">Proveedor</th>
+                    <th className="px-4 py-3 text-left font-medium text-text-muted">Monto</th>
+                    <th className="px-4 py-3 text-left font-medium text-text-muted">Categoría</th>
+                    <th className="px-4 py-3 text-left font-medium text-text-muted">Tipo</th>
+                    <th className="px-4 py-3 text-left font-medium text-text-muted">No. factura</th>
+                    <th className="px-4 py-3 text-left font-medium text-text-muted">RUC</th>
+                    <th className="px-4 py-3 text-right font-medium text-text-muted">Acciones</th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-line">
                   {facturasFiltradas.map((factura) => (
-                    <tr key={factura.id} className="bg-white">
-                      <td className="px-4 py-3 text-slate-700">{factura.fecha}</td>
-                      <td className="px-4 py-3 text-slate-700">{factura.proveedor}</td>
-                      <td className="px-4 py-3 text-slate-700">{factura.monto}</td>
-                      <td className="px-4 py-3 text-slate-700">{factura.categoria}</td>
-                      <td className="px-4 py-3 text-slate-700">{factura.tipo}</td>
-                      <td className="px-4 py-3 text-slate-700">{factura.numeroFactura ?? ""}</td>
-                      <td className="px-4 py-3 text-slate-700">{factura.ruc ?? ""}</td>
+                    <tr key={factura.id} className="bg-surface">
+                      <td className="px-4 py-3 font-mono text-text">{factura.fecha}</td>
+                      <td className="px-4 py-3 text-text">{factura.proveedor}</td>
+                      <td className="px-4 py-3 font-mono text-text">{factura.monto}</td>
+                      <td className="px-4 py-3 text-text">{factura.categoria}</td>
+                      <td className="px-4 py-3 text-text">{factura.tipo}</td>
+                      <td className="px-4 py-3 text-text">{factura.numeroFactura ?? ""}</td>
+                      <td className="px-4 py-3 text-text">{factura.ruc ?? ""}</td>
                       <td className="px-4 py-3 text-right">
                         <button
                           type="button"
                           onClick={() => setFacturaAEliminar(factura)}
-                          className="inline-flex items-center justify-center rounded-xl border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                          className="inline-flex items-center justify-center rounded-xl border border-rust/40 bg-surface px-3 py-2 text-sm font-medium text-rust transition hover:bg-rust-soft"
                         >
                           Eliminar
                         </button>
@@ -261,17 +261,17 @@ export default function FacturasPage() {
       </div>
 
       {facturaAEliminar ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="text-lg font-semibold text-slate-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-xl">
+            <h2 className="text-lg font-semibold text-text">
               ¿Eliminar factura?
             </h2>
 
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-text-muted">
               Esta acción eliminará la factura de Google Sheets y no se puede deshacer.
             </p>
 
-            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+            <div className="mt-4 rounded-xl border border-line bg-surface-raised p-4 text-sm text-text">
               <p>
                 <span className="font-medium">Proveedor:</span>{" "}
                 {facturaAEliminar.proveedor || "Sin proveedor"}
@@ -289,7 +289,7 @@ export default function FacturasPage() {
                 type="button"
                 onClick={() => setFacturaAEliminar(null)}
                 disabled={isDeleting}
-                className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-text transition hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Cancelar
               </button>
@@ -298,7 +298,7 @@ export default function FacturasPage() {
                 type="button"
                 onClick={confirmarEliminar}
                 disabled={isDeleting}
-                className="inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-xl bg-rust px-4 py-3 text-sm font-medium text-ink transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isDeleting ? "Eliminando..." : "Sí, eliminar"}
               </button>

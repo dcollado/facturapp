@@ -15,3 +15,9 @@ export const tiposFactura = [
   "Comprobante",
   "Otro",
 ];
+
+export const categoriasIngreso = [
+  "Salario",
+  "Segundo trabajo",
+  "Otro ingreso",
+];

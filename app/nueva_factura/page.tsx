@@ -74,7 +74,7 @@ export default function NuevaFacturaPage() {
 
   const getSelectClass = (field: keyof FormState) =>
     `${fieldBaseClass} appearance-none ${
-      form[field] ? "text-slate-900" : "text-slate-400"
+      form[field] ? "text-text" : "text-text-muted"
     } ${hasError(field) ? fieldErrorClass : fieldNormalClass}`;
 
   const handleChange = (
@@ -226,15 +226,15 @@ export default function NuevaFacturaPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6">
+    <main className="min-h-screen bg-ink p-6">
       <div className="mx-auto max-w-3xl">
         <div className={sectionCardClass}>
           <div className="mb-6 flex items-start justify-between gap-4">
             <div className="flex-1">
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              <h1 className="font-display text-2xl font-bold tracking-tight text-text">
                 Nueva factura
               </h1>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-text-muted">
                 Registra una factura manualmente y organízala por tipo, mes y año.
               </p>
              
@@ -242,33 +242,33 @@ export default function NuevaFacturaPage() {
 
             <a
               href="/facturas"
-              className="hidden rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-indigo-400 hover:bg-slate-50 md:inline-flex"
+              className="hidden rounded-xl border border-line bg-surface px-4 py-2 text-sm font-medium text-text transition hover:border-gold hover:bg-surface-raised md:inline-flex"
             >
               Ver facturas
             </a>
           </div>
 {mensaje ? (
-  <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+  <div className="mb-4 rounded-xl border border-sage/30 bg-sage-soft px-4 py-3 text-sm text-sage">
     {mensaje}
   </div>
 ) : null}
 
 {error ? (
-  <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+  <div className="mb-4 rounded-xl border border-rust/30 bg-rust-soft px-4 py-3 text-sm text-rust">
     {error}
   </div>
 ) : null}
 
 {debugInfo ? (
-  <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-    <p className="mb-2 text-sm font-medium text-amber-800">DEBUG</p>
-    <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words text-xs text-amber-900">
+  <div className="mb-4 rounded-xl border border-gold/30 bg-gold-soft px-4 py-3">
+    <p className="mb-2 text-sm font-medium text-gold">DEBUG</p>
+    <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words text-xs text-gold">
       {debugInfo}
     </pre>
   </div>
 ) : null}
 
-          <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="mb-5 rounded-2xl border border-line bg-surface p-4">
             <label htmlFor="dgiUrl" className={labelClass}>
               Link consulta DGI
             </label>
@@ -293,7 +293,7 @@ export default function NuevaFacturaPage() {
                 type="button"
                 onClick={handleReadPastedUrl}
                 disabled={isSubmitting || isReadingQr || !dgiUrl.trim()}
-                className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-indigo-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-text transition hover:border-gold hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Leer link DGI
               </button>
@@ -302,13 +302,13 @@ export default function NuevaFacturaPage() {
                 type="button"
                 onClick={() => setShowScanner((prev) => !prev)}
                 disabled={isSubmitting || isReadingQr}
-                className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-indigo-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-text transition hover:border-gold hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {showScanner ? "Ocultar escáner" : "Escanear QR DGI"}
               </button>
 
               {isReadingQr ? (
-                <span className="inline-flex items-center rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                <span className="inline-flex items-center rounded-xl border border-gold/30 bg-gold-soft px-4 py-3 text-sm text-gold">
                   Consultando la DGI...
                 </span>
               ) : null}
@@ -430,7 +430,7 @@ export default function NuevaFacturaPage() {
                     </option>
                   ))}
                 </select>
-                <span className="pointer-events-none absolute right-4 top-[42px] text-slate-400">
+                <span className="pointer-events-none absolute right-4 top-[42px] text-text-muted">
                   ▾
                 </span>
               </div>
@@ -454,7 +454,7 @@ export default function NuevaFacturaPage() {
                     </option>
                   ))}
                 </select>
-                <span className="pointer-events-none absolute right-4 top-[42px] text-slate-400">
+                <span className="pointer-events-none absolute right-4 top-[42px] text-text-muted">
                   ▾
                 </span>
               </div>
@@ -480,14 +480,14 @@ export default function NuevaFacturaPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-xl bg-gold px-5 py-3 text-sm font-medium text-ink transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSubmitting ? "Guardando..." : "Guardar factura"}
               </button>
 
               <a
                 href="/"
-                className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:border-indigo-400 hover:bg-slate-50"
+                className="inline-flex items-center justify-center rounded-xl border border-line bg-surface px-5 py-3 text-sm font-medium text-text transition hover:border-gold hover:bg-surface-raised"
               >
                 Volver
               </a>

@@ -1,5 +1,15 @@
 import type { Metadata } from "next";
+import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
+import { Plus } from "lucide-react";
 import "./globals.css";
+
+const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-plex-mono",
+});
 
 export const metadata: Metadata = {
   title: "Gestor de Facturas",
@@ -12,15 +22,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body className="bg-white text-slate-900">
-         <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
+    <html
+      lang="es"
+      className={`${fraunces.variable} ${inter.variable} ${plexMono.variable}`}
+    >
+      <body className="bg-ink text-text font-body">
+        <header className="sticky top-0 z-50 border-b border-line bg-surface">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
 
             {/* LOGO */}
             <a
               href="/"
-              className="text-lg font-bold tracking-tight text-slate-900 transition hover:text-indigo-600"
+              className="font-display text-lg font-bold tracking-tight text-text transition hover:text-gold"
             >
               Facturas App
             </a>
@@ -30,23 +43,31 @@ export default function RootLayout({
 
               <a
                 href="/"
-                className="text-slate-600 transition-all duration-150 hover:text-indigo-600 hover:font-semibold"
+                className="text-text-muted transition-all duration-150 hover:text-gold hover:font-semibold"
               >
                 Inicio
               </a>
 
               <a
                 href="/facturas"
-                className="text-slate-600 transition-all duration-150 hover:text-indigo-600 hover:font-semibold"
+                className="text-text-muted transition-all duration-150 hover:text-gold hover:font-semibold"
               >
                 Facturas
               </a>
 
               <a
-                href="/nueva_factura"
-                className="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white transition-all duration-150 hover:bg-indigo-700 hover:font-semibold"
+                href="/fijos"
+                className="text-text-muted transition-all duration-150 hover:text-gold hover:font-semibold"
               >
-                + Nueva
+                Ítems fijos
+              </a>
+
+              <a
+                href="/nueva_factura"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gold px-4 py-2 font-medium text-ink transition-all duration-150 hover:opacity-90 hover:font-semibold"
+              >
+                <Plus size={16} />
+                Nueva
               </a>
 
             </nav>
