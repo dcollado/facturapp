@@ -1,12 +1,11 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LockKeyhole, ReceiptText } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -42,7 +41,7 @@ export default function LoginPage() {
         return;
       }
 
-      const nextPath = searchParams.get("next");
+      const nextPath = new URLSearchParams(window.location.search).get("next");
       const safeNextPath =
         nextPath?.startsWith("/") && !nextPath.startsWith("//")
           ? nextPath
@@ -125,7 +124,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <p className="font-display text-xl font-semibold">Facturas App</p>
+              <p className="font-display text-xl font-semibold">Budget Plus</p>
               <p className="text-xs text-text-muted">Finanzas personales</p>
             </div>
           </div>
