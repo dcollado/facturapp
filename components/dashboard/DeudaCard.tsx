@@ -61,7 +61,7 @@ export default function DeudaCard({ deuda, onEdit }: DeudaCardProps) {
           onClick={onEdit}
           className="flex items-center gap-1 rounded-full border border-line px-2 py-1 text-xs text-text-muted transition hover:border-gold hover:text-gold"
         >
-          <Pencil size={11} /> Editar
+          <Pencil size={14} /> Editar
         </button>
       </div>
 

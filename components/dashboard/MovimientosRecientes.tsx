@@ -60,7 +60,7 @@ export default function MovimientosRecientes({
     <section className="rounded-2xl border border-line bg-surface-raised">
       <div className="flex items-center justify-between border-b border-line px-4 py-4 sm:px-5">
         <div>
-          <h2 className="font-serif text-xl font-semibold text-text">
+          <h2 className="font-display text-xl font-semibold text-text">
             Movimientos recientes
           </h2>
 
@@ -74,7 +74,7 @@ export default function MovimientosRecientes({
           className="flex items-center gap-1 text-sm font-medium text-gold transition hover:opacity-80"
         >
           Ver todos
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight size={18} />
         </Link>
       </div>
 
@@ -108,9 +108,9 @@ export default function MovimientosRecientes({
                   }`}
                 >
                   {esIngreso ? (
-                    <ArrowUpRight className="h-4 w-4" />
+                    <ArrowUpRight size={14} />
                   ) : (
-                    <ArrowDownRight className="h-4 w-4" />
+                    <ArrowDownRight size={14} />
                   )}
                 </span>
 

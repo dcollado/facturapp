@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { categoriasFactura, tiposFactura } from "@/lib/facturas";
 import {
   fieldBaseClass,
@@ -73,7 +74,7 @@ export default function NuevaFacturaPage() {
     `${fieldBaseClass} ${hasError(field) ? fieldErrorClass : fieldNormalClass}`;
 
   const getSelectClass = (field: keyof FormState) =>
-    `${fieldBaseClass} appearance-none ${
+    `${fieldBaseClass} appearance-none pr-9 ${
       form[field] ? "text-text" : "text-text-muted"
     } ${hasError(field) ? fieldErrorClass : fieldNormalClass}`;
 
@@ -411,52 +412,58 @@ export default function NuevaFacturaPage() {
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
-              <div className="relative">
+              <div>
                 <label htmlFor="categoria" className={labelClass}>
                   Categoría
                 </label>
-                <select
-                  id="categoria"
-                  name="categoria"
-                  value={form.categoria}
-                  onChange={handleChange}
-                  className={getSelectClass("categoria")}
-                  disabled={isSubmitting}
-                >
-                  <option value="">Selecciona una categoría</option>
-                  {categoriasFactura.map((categoria) => (
-                    <option key={categoria} value={categoria}>
-                      {categoria}
-                    </option>
-                  ))}
-                </select>
-                <span className="pointer-events-none absolute right-4 top-[42px] text-text-muted">
-                  ▾
-                </span>
+                <div className="relative">
+                  <select
+                    id="categoria"
+                    name="categoria"
+                    value={form.categoria}
+                    onChange={handleChange}
+                    className={getSelectClass("categoria")}
+                    disabled={isSubmitting}
+                  >
+                    <option value="">Selecciona una categoría</option>
+                    {categoriasFactura.map((categoria) => (
+                      <option key={categoria} value={categoria}>
+                        {categoria}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={16}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+                  />
+                </div>
               </div>
 
-              <div className="relative">
+              <div>
                 <label htmlFor="tipo" className={labelClass}>
                   Tipo de factura
                 </label>
-                <select
-                  id="tipo"
-                  name="tipo"
-                  value={form.tipo}
-                  onChange={handleChange}
-                  className={getSelectClass("tipo")}
-                  disabled={isSubmitting}
-                >
-                  <option value="">Selecciona un tipo</option>
-                  {tiposFactura.map((tipo) => (
-                    <option key={tipo} value={tipo}>
+                <div className="relative">
+                  <select
+                    id="tipo"
+                    name="tipo"
+                    value={form.tipo}
+                    onChange={handleChange}
+                    className={getSelectClass("tipo")}
+                    disabled={isSubmitting}
+                  >
+                    <option value="">Selecciona un tipo</option>
+                    {tiposFactura.map((tipo) => (
+                      <option key={tipo} value={tipo}>
                       {tipo}
                     </option>
                   ))}
                 </select>
-                <span className="pointer-events-none absolute right-4 top-[42px] text-text-muted">
-                  ▾
-                </span>
+                  <ChevronDown
+                    size={16}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+                  />
+                </div>
               </div>
             </div>
 

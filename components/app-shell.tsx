@@ -85,7 +85,7 @@ export function AppShell({
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link
             href="/"
-            className="font-serif text-xl font-semibold text-text"
+            className="font-display text-xl font-semibold text-text"
           >
             Budget Plus
           </Link>
@@ -117,7 +117,7 @@ export function AppShell({
             disabled={loggingOut}
             className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-rust transition hover:bg-rust/10 disabled:cursor-not-allowed disabled:opacity-60 md:flex"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut size={18} />
 
             {loggingOut
               ? "Cerrando..."
@@ -138,9 +138,9 @@ export function AppShell({
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-surface-raised text-text-muted transition hover:border-gold/50 hover:text-text md:hidden"
           >
             {menuOpen ? (
-              <X className="h-5 w-5" />
+              <X size={18} />
             ) : (
-              <Menu className="h-5 w-5" />
+              <Menu size={18} />
             )}
           </button>
         </div>
@@ -179,7 +179,7 @@ export function AppShell({
                 disabled={loggingOut}
                 className="mt-1 flex items-center gap-1.5 rounded-lg px-2 py-3 text-left text-sm text-rust transition hover:bg-rust/10 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut size={18} />
 
                 {loggingOut
                   ? "Cerrando sesión..."

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 import { categoriasFactura, categoriasIngreso } from "@/lib/facturas";
 import type { Movimiento, TipoMovimiento, MetodoPago } from "@/lib/movimientos-store";
 import type { Deuda } from "@/lib/deudas";
@@ -204,61 +204,79 @@ export default function QuickAddModal({
           {tipo === "gasto" && deudas.length > 0 ? (
             <div className="flex flex-col gap-1.5">
               <label className={labelClass}>Tipo de gasto</label>
-              <select
-                value={deudaId}
-                onChange={(e) => {
-                  setDeudaId(e.target.value);
-                  setCategoria("");
-                  setMetodoPago("efectivo");
-                  setTarjetaCompraId("");
-                }}
-                className={`${fieldBaseClass} ${fieldNormalClass} appearance-none text-text`}
-              >
-                <option value="">Gasto misceláneo</option>
-                {deudas.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    Pago: {d.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={deudaId}
+                  onChange={(e) => {
+                    setDeudaId(e.target.value);
+                    setCategoria("");
+                    setMetodoPago("efectivo");
+                    setTarjetaCompraId("");
+                  }}
+                  className={`${fieldBaseClass} ${fieldNormalClass} appearance-none pr-9 text-text`}
+                >
+                  <option value="">Gasto misceláneo</option>
+                  {deudas.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      Pago: {d.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={16}
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+                />
+              </div>
             </div>
           ) : null}
 
           {tipo === "gasto" && !esPagoDeuda ? (
             <div className="flex flex-col gap-1.5">
               <label className={labelClass}>Método de pago</label>
-              <select
-                value={metodoPago}
-                onChange={(e) => {
-                  setMetodoPago(e.target.value as MetodoPago);
-                  setTarjetaCompraId("");
-                }}
-                className={`${fieldBaseClass} ${fieldNormalClass} appearance-none text-text`}
-              >
-                <option value="efectivo">Efectivo</option>
-                <option value="debito">Débito</option>
-                {tarjetas.length > 0 ? <option value="tarjeta">Tarjeta de crédito</option> : null}
-              </select>
+              <div className="relative">
+                <select
+                  value={metodoPago}
+                  onChange={(e) => {
+                    setMetodoPago(e.target.value as MetodoPago);
+                    setTarjetaCompraId("");
+                  }}
+                  className={`${fieldBaseClass} ${fieldNormalClass} appearance-none pr-9 text-text`}
+                >
+                  <option value="efectivo">Efectivo</option>
+                  <option value="debito">Débito</option>
+                  {tarjetas.length > 0 ? <option value="tarjeta">Tarjeta de crédito</option> : null}
+                </select>
+                <ChevronDown
+                  size={16}
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+                />
+              </div>
             </div>
           ) : null}
 
           {esCompraConTarjeta ? (
             <div className="flex flex-col gap-1.5">
               <label className={labelClass}>¿Con qué tarjeta?</label>
-              <select
-                value={tarjetaCompraId}
-                onChange={(e) => setTarjetaCompraId(e.target.value)}
-                className={`${fieldBaseClass} ${fieldNormalClass} appearance-none ${
-                  tarjetaCompraId ? "text-text" : "text-text-muted"
-                }`}
-              >
-                <option value="">Selecciona</option>
-                {tarjetas.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={tarjetaCompraId}
+                  onChange={(e) => setTarjetaCompraId(e.target.value)}
+                  className={`${fieldBaseClass} ${fieldNormalClass} appearance-none pr-9 ${
+                    tarjetaCompraId ? "text-text" : "text-text-muted"
+                  }`}
+                >
+                  <option value="">Selecciona</option>
+                  {tarjetas.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={16}
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+                />
+              </div>
             </div>
           ) : null}
 
@@ -298,20 +316,26 @@ export default function QuickAddModal({
             {!esPagoDeuda ? (
               <div className="flex flex-col gap-1.5">
                 <label className={labelClass}>Categoría</label>
-                <select
-                  value={categoria}
-                  onChange={(e) => setCategoria(e.target.value)}
-                  className={`${fieldBaseClass} ${fieldNormalClass} appearance-none ${
-                    categoria ? "text-text" : "text-text-muted"
-                  }`}
-                >
-                  <option value="">Selecciona</option>
-                  {categorias.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={categoria}
+                    onChange={(e) => setCategoria(e.target.value)}
+                    className={`${fieldBaseClass} ${fieldNormalClass} appearance-none pr-9 ${
+                      categoria ? "text-text" : "text-text-muted"
+                    }`}
+                  >
+                    <option value="">Selecciona</option>
+                    {categorias.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={16}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+                  />
+                </div>
               </div>
             ) : (
               <div className="flex flex-col gap-1.5">

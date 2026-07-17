@@ -5,6 +5,7 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   CalendarDays,
+  ChevronDown,
   RotateCcw,
   Search,
   Trash2,
@@ -206,8 +207,8 @@ export default function MovimientosTable({
               Buscar
             </span>
 
-            <span className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3">
-              <Search className="h-4 w-4 shrink-0 text-text-muted" />
+            <span className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 transition focus-within:border-gold focus-within:ring-4 focus-within:ring-gold/20 hover:border-gold/60">
+              <Search size={18} className="shrink-0 text-text-muted" />
 
               <input
                 value={busqueda}
@@ -225,19 +226,25 @@ export default function MovimientosTable({
               Tipo
             </span>
 
-            <select
-              value={tipo}
-              onChange={(event) =>
-                setTipo(
-                  event.target.value as "" | TipoMovimiento
-                )
-              }
-              className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-text outline-none"
-            >
-              <option value="">Todos</option>
-              <option value="ingreso">Ingresos</option>
-              <option value="gasto">Gastos</option>
-            </select>
+            <div className="relative">
+              <select
+                value={tipo}
+                onChange={(event) =>
+                  setTipo(
+                    event.target.value as "" | TipoMovimiento
+                  )
+                }
+                className="w-full appearance-none rounded-xl border border-line bg-surface px-3 py-2.5 pr-9 text-sm text-text outline-none transition hover:border-gold focus:border-gold focus:ring-4 focus:ring-gold/20"
+              >
+                <option value="">Todos</option>
+                <option value="ingreso">Ingresos</option>
+                <option value="gasto">Gastos</option>
+              </select>
+              <ChevronDown
+                size={16}
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+              />
+            </div>
           </label>
 
           <label className="lg:col-span-3">
@@ -245,8 +252,8 @@ export default function MovimientosTable({
               Desde
             </span>
 
-            <span className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3">
-              <CalendarDays className="h-4 w-4 shrink-0 text-text-muted" />
+            <span className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 transition focus-within:border-gold focus-within:ring-4 focus-within:ring-gold/20 hover:border-gold/60">
+              <CalendarDays size={18} className="shrink-0 text-text-muted" />
 
               <input
                 type="date"
@@ -265,8 +272,8 @@ export default function MovimientosTable({
               Hasta
             </span>
 
-            <span className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3">
-              <CalendarDays className="h-4 w-4 shrink-0 text-text-muted" />
+            <span className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 transition focus-within:border-gold focus-within:ring-4 focus-within:ring-gold/20 hover:border-gold/60">
+              <CalendarDays size={18} className="shrink-0 text-text-muted" />
 
               <input
                 type="date"
@@ -325,7 +332,7 @@ export default function MovimientosTable({
               disabled={!hayFiltros}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-line px-3 py-2.5 text-sm font-medium text-text-muted transition hover:border-gold/50 hover:text-text disabled:cursor-not-allowed disabled:opacity-40"
             >
-              <RotateCcw className="h-4 w-4" />
+              <RotateCcw size={18} />
               Limpiar filtros
             </button>
           </div>
@@ -420,9 +427,9 @@ export default function MovimientosTable({
                             }`}
                           >
                             {esIngreso ? (
-                              <ArrowUpRight className="h-4 w-4" />
+                              <ArrowUpRight size={14} />
                             ) : (
-                              <ArrowDownRight className="h-4 w-4" />
+                              <ArrowDownRight size={14} />
                             )}
                           </span>
 
@@ -480,7 +487,7 @@ export default function MovimientosTable({
                                 ...
                               </span>
                             ) : (
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 size={18} />
                             )}
                           </button>
                         </td>
@@ -514,9 +521,9 @@ export default function MovimientosTable({
                       }`}
                     >
                       {esIngreso ? (
-                        <ArrowUpRight className="h-5 w-5" />
+                        <ArrowUpRight size={18} />
                       ) : (
-                        <ArrowDownRight className="h-5 w-5" />
+                        <ArrowDownRight size={18} />
                       )}
                     </span>
 
@@ -569,7 +576,7 @@ export default function MovimientosTable({
                             }
                             className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-rust transition hover:bg-rust-soft disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 size={18} />
 
                             {eliminandoId ===
                             movimiento.id

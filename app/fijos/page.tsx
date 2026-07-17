@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { categoriasFactura, categoriasIngreso } from "@/lib/facturas";
 import type { ItemFijo } from "@/lib/items-fijos-store";
 import {
@@ -269,20 +270,26 @@ export default function ItemsFijosPage() {
               </div>
               <div>
                 <label className={labelClass}>Categoría</label>
-                <select
-                  value={form.categoria}
-                  onChange={(e) => setForm((f) => ({ ...f, categoria: e.target.value }))}
-                  className={`${fieldBaseClass} ${fieldNormalClass} appearance-none ${
-                    form.categoria ? "text-text" : "text-text-muted"
-                  }`}
-                >
-                  <option value="">Selecciona</option>
-                  {categorias.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={form.categoria}
+                    onChange={(e) => setForm((f) => ({ ...f, categoria: e.target.value }))}
+                    className={`${fieldBaseClass} ${fieldNormalClass} appearance-none pr-9 ${
+                      form.categoria ? "text-text" : "text-text-muted"
+                    }`}
+                  >
+                    <option value="">Selecciona</option>
+                    {categorias.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={16}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+                  />
+                </div>
               </div>
             </div>
 

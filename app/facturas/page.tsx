@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import type { Factura } from "@/lib/facturas-store";
 import {
   fieldBaseClass,
@@ -149,66 +150,90 @@ export default function FacturasPage() {
           <div className="mb-6 grid gap-4 md:grid-cols-4">
             <div>
               <label className={labelClass}>Mes</label>
-              <select
+              <div className="relative">
+                <select
                 value={mesFiltro}
                 onChange={(e) => setMesFiltro(e.target.value)}
-                className={`${fieldBaseClass} ${fieldNormalClass} appearance-none`}
-              >
-                <option value="">Todos</option>
-                {meses.map((mes) => (
-                  <option key={mes} value={mes}>
-                    {mes}
-                  </option>
-                ))}
-              </select>
+                className={`${fieldBaseClass} ${fieldNormalClass} appearance-none pr-9`}
+                >
+                  <option value="">Todos</option>
+                  {meses.map((mes) => (
+                    <option key={mes} value={mes}>
+                      {mes}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={16}
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+                />
+              </div>
             </div>
 
             <div>
               <label className={labelClass}>Año</label>
-              <select
+              <div className="relative">
+                <select
                 value={anioFiltro}
                 onChange={(e) => setAnioFiltro(e.target.value)}
-                className={`${fieldBaseClass} ${fieldNormalClass} appearance-none`}
-              >
-                <option value="">Todos</option>
-                {anios.map((anio) => (
-                  <option key={anio} value={anio}>
-                    {anio}
-                  </option>
-                ))}
-              </select>
+                className={`${fieldBaseClass} ${fieldNormalClass} appearance-none pr-9`}
+                >
+                  <option value="">Todos</option>
+                  {anios.map((anio) => (
+                    <option key={anio} value={anio}>
+                      {anio}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={16}
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+                />
+              </div>
             </div>
 
             <div>
               <label className={labelClass}>Tipo</label>
-              <select
+              <div className="relative">
+                <select
                 value={tipoFiltro}
                 onChange={(e) => setTipoFiltro(e.target.value)}
-                className={`${fieldBaseClass} ${fieldNormalClass} appearance-none`}
-              >
-                <option value="">Todos</option>
-                {tipos.map((tipo) => (
-                  <option key={tipo} value={tipo}>
-                    {tipo}
-                  </option>
-                ))}
-              </select>
+                className={`${fieldBaseClass} ${fieldNormalClass} appearance-none pr-9`}
+                >
+                  <option value="">Todos</option>
+                  {tipos.map((tipo) => (
+                    <option key={tipo} value={tipo}>
+                      {tipo}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={16}
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+                />
+              </div>
             </div>
 
             <div>
               <label className={labelClass}>Categoría</label>
-              <select
+              <div className="relative">
+                <select
                 value={categoriaFiltro}
                 onChange={(e) => setCategoriaFiltro(e.target.value)}
-                className={`${fieldBaseClass} ${fieldNormalClass} appearance-none`}
-              >
-                <option value="">Todas</option>
-                {categorias.map((categoria) => (
-                  <option key={categoria} value={categoria}>
-                    {categoria}
-                  </option>
-                ))}
-              </select>
+                className={`${fieldBaseClass} ${fieldNormalClass} appearance-none pr-9`}
+                >
+                  <option value="">Todas</option>
+                  {categorias.map((categoria) => (
+                    <option key={categoria} value={categoria}>
+                      {categoria}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={16}
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+                />
+              </div>
             </div>
           </div>
 
