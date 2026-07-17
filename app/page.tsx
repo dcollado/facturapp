@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Wallet, Receipt, ArrowUpRight, ArrowDownRight, Trash2 } from "lucide-react";
+import { Plus, Wallet, Receipt, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import type { Movimiento, TipoMovimiento } from "@/lib/movimientos-store";
 import type { Deuda } from "@/lib/deudas";
 import StatCard from "@/components/dashboard/StatCard";
@@ -12,7 +12,6 @@ import PrestamoEditModal from "@/components/dashboard/modals/PrestamoEditModal";
 import TarjetaEditModal from "@/components/dashboard/modals/TarjetaEditModal";
 import DeudaEditModal from "@/components/dashboard/modals/DeudaEditModal";
 
-const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 const mesesCompletos = [
   "enero", "febrero", "marzo", "abril", "mayo", "junio",
   "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
@@ -26,13 +25,6 @@ function formatMoney(n: number): string {
   })}`;
 }
 
-function formatFechaCorta(fecha: string): string {
-  const partes = fecha.split("-").map(Number);
-  if (partes.length !== 3) return fecha;
-  const [, m, d] = partes;
-  if (!m || !d) return fecha;
-  return `${d} ${meses[m - 1]}`;
-}
 
 export default function Home() {
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
@@ -126,32 +118,11 @@ export default function Home() {
     }, [movimientos]);
 
   const maxCategoria = categorias.length > 0 ? categorias[0].monto : 0;
-  const movimientosOrdenados = [...movimientos].sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
 
   const handleAdded = (mov: Movimiento) => setMovimientos((prev) => [...prev, mov]);
   const handleDeudaSaved = (actualizada: Deuda) =>
     setDeudas((prev) => prev.map((d) => (d.id === actualizada.id ? actualizada : d)));
 
-  const [eliminandoId, setEliminandoId] = useState<string | null>(null);
-
-  const handleEliminarMovimiento = async (id: string) => {
-    setEliminandoId(id);
-    setError("");
-    try {
-      const res = await fetch(`/api/movimientos?id=${encodeURIComponent(id)}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || "No se pudo eliminar el movimiento.");
-      }
-      setMovimientos((prev) => prev.filter((m) => m.id !== id));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ocurrió un error eliminando.");
-    } finally {
-      setEliminandoId(null);
-    }
-  };
 
   const deudaEnEdicion = deudas.find((d) => d.id === editandoDeudaId) || null;
 
@@ -263,71 +234,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Movements table */}
-        <div className="flex flex-col gap-3">
-          <h2 className="px-1 text-sm font-semibold text-text">Movimientos de {etiquetaMes}</h2>
-          <div className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm">
-            {loading ? (
-              <p className="text-xs text-text-muted">Cargando...</p>
-            ) : movimientosOrdenados.length === 0 ? (
-              <p className="text-xs text-text-muted">Todavía no hay movimientos este mes.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[420px] text-sm">
-                  <thead>
-                    <tr className="text-text-muted">
-                      <th className="pb-2 text-left font-normal">Fecha</th>
-                      <th className="pb-2 text-left font-normal">Descripción</th>
-                      <th className="pb-2 text-right font-normal">Monto</th>
-                      <th className="pb-2 text-right font-normal"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {movimientosOrdenados.map((m) => (
-                      <tr key={m.id} className="border-t border-line">
-                        <td className="py-2.5 font-mono text-xs text-text-muted">
-                          {formatFechaCorta(m.fecha)}
-                        </td>
-                        <td className="py-2.5 text-text">{m.descripcion}</td>
-                        <td className="py-2.5 text-right font-mono">
-                          <span
-                            className={`inline-flex items-center justify-end gap-1 ${
-                              m.tipo === "ingreso" ? "text-sage" : "text-rust"
-                            }`}
-                          >
-                            {m.tipo === "ingreso" ? (
-                              <ArrowUpRight size={12} />
-                            ) : (
-                              <ArrowDownRight size={12} />
-                            )}
-                            {formatMoney(
-                              m.tipo === "ingreso" ? Number(m.monto) : -Number(m.monto)
-                            )}
-                          </span>
-                        </td>
-                        <td className="py-2.5 text-right">
-                          <button
-                            type="button"
-                            onClick={() => handleEliminarMovimiento(m.id)}
-                            disabled={eliminandoId === m.id}
-                            className="rounded-full p-1 text-text-muted transition hover:text-rust disabled:cursor-not-allowed disabled:opacity-50"
-                            aria-label="Eliminar movimiento"
-                          >
-                            {eliminandoId === m.id ? (
-                              <span className="text-xs">...</span>
-                            ) : (
-                              <Trash2 size={14} />
-                            )}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
+
       </div>
 
       {modalTipo ? (

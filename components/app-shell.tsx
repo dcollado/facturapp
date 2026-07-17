@@ -1,15 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { LogOut, Menu, X } from "lucide-react";
-// Al reactivar el botón "Nueva factura" más abajo, agregar Plus aquí:
-// import { Plus, LogOut, Menu, X } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import {
+  LogOut,
+  Menu,
+  X,
+} from "lucide-react";
+import Link from "next/link";
+import {
+  usePathname,
+  useRouter,
+} from "next/navigation";
 
 const navLinks = [
-  { href: "/", label: "Dashboard" },
-  { href: "/fijos", label: "Ítems fijos" },
-  { href: "/familia", label: "Familia" },
+  {
+    href: "/",
+    label: "Dashboard",
+  },
+  {
+    href: "/movimientos",
+    label: "Movimientos",
+  },
+  {
+    href: "/familia",
+    label: "Familia",
+  },
+  {
+    href: "/fijos",
+    label: "Ítems fijos",
+  },
+  
 ];
 
 export function AppShell({
@@ -19,10 +39,15 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const isLoginPage = pathname === "/login";
 
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
+  const isLoginPage =
+    pathname === "/login";
+
+  const [menuOpen, setMenuOpen] =
+    useState(false);
+
+  const [loggingOut, setLoggingOut] =
+    useState(false);
 
   if (isLoginPage) {
     return <>{children}</>;
@@ -32,106 +57,135 @@ export function AppShell({
     setLoggingOut(true);
 
     try {
-      await fetch("/api/logout", { method: "POST" });
+      await fetch("/api/logout", {
+        method: "POST",
+      });
     } finally {
       router.replace("/login");
       router.refresh();
     }
   }
 
+  function linkActivo(
+    href: string
+  ): boolean {
+    if (href === "/") {
+      return pathname === "/";
+    }
+
+    return (
+      pathname === href ||
+      pathname.startsWith(`${href}/`)
+    );
+  }
+
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-line bg-surface">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <a
+      <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link
             href="/"
-            className="font-display text-lg font-bold tracking-tight text-text transition hover:text-gold"
+            className="font-serif text-xl font-semibold text-text"
           >
             Budget Plus
-          </a>
+          </Link>
 
-          {/* Menú de escritorio */}
-          <nav className="hidden items-center gap-6 text-sm md:flex">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-text-muted transition-all duration-150 hover:font-semibold hover:text-gold"
-              >
-                {link.label}
-              </a>
-            ))}
+          <nav className="hidden items-center gap-1 md:flex">
+            {navLinks.map((link) => {
+              const activo =
+                linkActivo(link.href);
 
-            {/*
-            <a
-              href="/nueva_factura"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-gold px-4 py-2 font-medium text-ink transition-all duration-150 hover:font-semibold hover:opacity-90"
-            >
-              <Plus size={16} />
-              Nueva
-            </a>
-            */}
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={loggingOut}
-              className="flex items-center gap-1.5 text-text-muted transition-all duration-150 hover:font-semibold hover:text-rust disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <LogOut size={16} />
-              {loggingOut ? "Cerrando..." : "Salir"}
-            </button>
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`rounded-lg px-3 py-2 text-sm transition ${
+                    activo
+                      ? "bg-surface-raised font-medium text-gold"
+                      : "text-text-muted hover:bg-surface-raised hover:text-text"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
 
-          {/* Botón hamburguesa — solo en móvil */}
           <button
             type="button"
-            onClick={() => setMenuOpen((value) => !value)}
-            aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-rust transition hover:bg-rust/10 disabled:cursor-not-allowed disabled:opacity-60 md:flex"
+          >
+            <LogOut className="h-4 w-4" />
+
+            {loggingOut
+              ? "Cerrando..."
+              : "Salir"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              setMenuOpen((value) => !value)
+            }
+            aria-label={
+              menuOpen
+                ? "Cerrar menú"
+                : "Abrir menú"
+            }
             aria-expanded={menuOpen}
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-surface-raised text-text-muted transition hover:border-gold/50 hover:text-text md:hidden"
           >
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+            {menuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
         </div>
 
-        {/* Panel de menú móvil */}
         {menuOpen ? (
-          <nav className="flex flex-col gap-1 border-t border-line bg-surface px-6 py-3 md:hidden">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => setMenuOpen(false)}
-                className="rounded-lg px-2 py-3 text-sm text-text-muted transition hover:bg-surface-raised hover:text-gold"
+          <nav className="border-t border-line bg-surface px-4 py-3 md:hidden">
+            <div className="mx-auto flex max-w-7xl flex-col">
+              {navLinks.map((link) => {
+                const activo =
+                  linkActivo(link.href);
+
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() =>
+                      setMenuOpen(false)
+                    }
+                    className={`rounded-lg px-2 py-3 text-sm transition ${
+                      activo
+                        ? "bg-surface-raised font-medium text-gold"
+                        : "text-text-muted hover:bg-surface-raised hover:text-text"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  void handleLogout();
+                }}
+                disabled={loggingOut}
+                className="mt-1 flex items-center gap-1.5 rounded-lg px-2 py-3 text-left text-sm text-rust transition hover:bg-rust/10 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {link.label}
-              </a>
-            ))}
+                <LogOut className="h-4 w-4" />
 
-            {/*
-            <a
-              href="/nueva_factura"
-              onClick={() => setMenuOpen(false)}
-              className="mt-1 flex items-center justify-center gap-1.5 rounded-lg bg-gold px-4 py-3 text-sm font-medium text-ink transition hover:opacity-90"
-            >
-              <Plus size={16} />
-              Nueva
-            </a>
-            */}
-
-            <button
-              type="button"
-              onClick={() => {
-                setMenuOpen(false);
-                handleLogout();
-              }}
-              disabled={loggingOut}
-              className="mt-1 flex items-center gap-1.5 rounded-lg px-2 py-3 text-left text-sm text-rust transition hover:bg-rust/10 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <LogOut size={16} />
-              {loggingOut ? "Cerrando sesión..." : "Cerrar sesión"}
-            </button>
+                {loggingOut
+                  ? "Cerrando sesión..."
+                  : "Cerrar sesión"}
+              </button>
+            </div>
           </nav>
         ) : null}
       </header>
